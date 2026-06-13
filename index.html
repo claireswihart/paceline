@@ -49,8 +49,7 @@
   .chip:hover span{border-color:var(--ink)}
   .btn{font:inherit;font-weight:700;cursor:pointer;border-radius:999px;border:1.5px solid var(--ink);padding:13px 24px;display:inline-flex;align-items:center;gap:9px;transition:.12s}
   .btn-primary{background:var(--cardinal);color:#fff;border-color:var(--cardinal-dk)}.btn-primary:hover{background:var(--cardinal-dk)}
-  .btn-go{background:var(--hivis);color:var(--ink);border-color:var(--ink)}.btn-go:hover{filter:brightness(.95)}
-  .btn-ghost{background:transparent;color:var(--ink)}.btn-ghost:hover{background:rgba(27,29,34,.06)}
+  .btn-danger{background:#fff;color:var(--cardinal);border-color:var(--cardinal)}.btn-danger:hover{background:#fbeceb}
   .btn:focus-visible{outline:3px solid var(--hivis);outline-offset:2px}
   .btn[disabled]{opacity:.5;cursor:not-allowed}
   .actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px}
@@ -65,10 +64,12 @@
   .startlist li{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--rule)}
   .startlist li:last-child{border-bottom:0}
   .bib{font-family:"Space Mono",monospace;font-weight:700;color:var(--cardinal);font-size:13px;min-width:34px}
-  .who{font-weight:600}
-  .meta{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .who{font-weight:600;flex:1}
+  .meta{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
   .tag{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.04em;border:1px solid var(--rule);border-radius:6px;padding:3px 7px;color:var(--ink-soft);background:#fff;text-transform:uppercase}
   .tag.pace{color:#fff;background:var(--ink);border-color:var(--ink)}
+  .remove-btn{font:inherit;font-size:12px;font-weight:600;cursor:pointer;background:none;border:1px solid var(--rule);border-radius:6px;padding:3px 9px;color:var(--cardinal);transition:.12s;white-space:nowrap}
+  .remove-btn:hover{background:#fbeceb;border-color:var(--cardinal)}
   .empty{color:var(--ink-soft);font-size:15px;padding:18px;text-align:center;border:1.5px dashed var(--rule);border-radius:12px}
   .pairs{display:grid;gap:16px}
   .pair{border:1.5px solid var(--ink);border-radius:14px;background:var(--paper-2);overflow:hidden;box-shadow:var(--shadow)}
@@ -82,11 +83,20 @@
   .pair-foot .ride b{color:var(--hivis)}
   .pair-foot .shared{font-size:12px;color:#cfcabb;margin-left:auto}
   .bye{border:1.5px dashed var(--cardinal);border-radius:12px;padding:14px 18px;background:#fbeceb;color:var(--cardinal-dk);font-size:14px;font-weight:500}
+  .match-banner{background:var(--ink);color:var(--paper);border-radius:12px;padding:14px 18px;font-family:"Space Mono",monospace;font-size:13px;margin-bottom:18px}
+  .match-banner b{color:var(--hivis)}
   footer{border-top:2px solid var(--ink);padding:26px 0 50px;color:var(--ink-soft);font-size:13px}
   footer b{color:var(--ink)}
   .loading{font-family:"Space Mono",monospace;color:var(--ink-soft);font-size:14px;padding:16px}
+  /* remove modal */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(27,29,34,.55);z-index:100;align-items:center;justify-content:center}
+  .overlay.open{display:flex}
+  .modal{background:var(--paper-2);border:1.5px solid var(--ink);border-radius:16px;padding:28px;max-width:380px;width:90%;box-shadow:0 24px 60px -12px rgba(27,29,34,.5)}
+  .modal h3{font-family:"Anton",sans-serif;font-weight:400;text-transform:uppercase;font-size:26px;margin:0 0 10px}
+  .modal p{font-size:14px;color:var(--ink-soft);margin:0 0 20px}
+  .modal .row{justify-content:flex-end}
   @media(max-width:560px){.pair-top{flex-direction:column}.ph+.ph{border-left:0;border-top:1.5px dashed var(--rule)}}
-  @media(prefers-reduced-motion:reduce){.rider{animation:none;left:auto}.rider:nth-child(1){left:6%}.rider:nth-child(2){left:24%}.rider:nth-child(3){left:42%}.rider:nth-child(4){left:60%}.rider:nth-child(5){left:78%}}
+  @media(prefers-reduced-motion:reduce){.rider{animation:none}.rider:nth-child(1){left:6%}.rider:nth-child(2){left:24%}.rider:nth-child(3){left:42%}.rider:nth-child(4){left:60%}.rider:nth-child(5){left:78%}}
 </style>
 
 <header class="hero">
@@ -102,7 +112,7 @@
   <section id="join">
     <div class="sec-head">
       <span class="sec-num">01</span>
-      <div><h2>Drop in</h2><p class="sec-sub">Takes 30 seconds. You can re-submit anytime to update your entry.</p></div>
+      <div><h2>Drop in</h2><p class="sec-sub">Takes 30 seconds. Re-submit anytime to update your entry.</p></div>
     </div>
     <div class="card">
       <div class="field">
@@ -112,12 +122,25 @@
       <div class="field">
         <label class="flabel">Reach me on</label>
         <div class="row">
-          <select id="f-ctype" aria-label="Contact method">
-            <option value="Text">Text</option>
-            <option value="Instagram">Instagram</option>
-            <option value="Email">Email</option>
-          </select>
+          <select id="f-ctype"><option value="Text">Text</option><option value="Instagram">Instagram</option><option value="Email">Email</option></select>
           <input class="grow" type="text" id="f-contact" maxlength="60" placeholder="@maya.rides / number / email" autocomplete="off">
+        </div>
+      </div>
+      <div class="field">
+        <label class="flabel">Gender</label>
+        <div class="chips" id="f-gender" role="radiogroup">
+          <label class="chip"><input type="radio" name="gender" value="Male"><span>Male</span></label>
+          <label class="chip"><input type="radio" name="gender" value="Female"><span>Female</span></label>
+          <label class="chip"><input type="radio" name="gender" value="Non-binary"><span>Non-binary</span></label>
+          <label class="chip"><input type="radio" name="gender" value="Prefer not to say"><span>Prefer not to say</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label class="flabel">Ride preference <span class="hint">— who you'd like to be paired with</span></label>
+        <div class="chips" id="f-genpref" role="radiogroup">
+          <label class="chip"><input type="radio" name="genpref" value="Any"><span>Anyone</span></label>
+          <label class="chip"><input type="radio" name="genpref" value="Male"><span>Male only</span></label>
+          <label class="chip"><input type="radio" name="genpref" value="Female"><span>Female only</span></label>
         </div>
       </div>
       <div class="field">
@@ -178,19 +201,27 @@
   <section id="matches">
     <div class="sec-head">
       <span class="sec-num">03</span>
-      <div><h2>This week's pairings</h2><p class="sec-sub">One tap shuffles the bunch into pairs — same pace, shared terrain, overlapping days, and never the same partner two weeks running.</p></div>
+      <div><h2>This week's pairings</h2><p class="sec-sub">Matches are made automatically every Monday.</p></div>
     </div>
-    <div class="actions" style="margin-bottom:18px">
-      <button class="btn btn-go" id="matchBtn" type="button">⚡ Run this week's match</button>
-      <button class="btn btn-ghost" id="resetBtn" type="button">Clear roster</button>
-    </div>
-    <div id="matchArea"><div class="empty">No pairings yet. Get a few riders in the bunch, then run the match.</div></div>
+    <div id="matchArea"><div class="empty">No pairings yet — check back Monday.</div></div>
   </section>
 </main>
 
 <footer class="wrap">
   <p>Built for <b>Stanford Cycling</b>. Suggested routes lean local (Old La Honda, Portola Valley, Arastradero). <b>Keep one no-drop ride on the calendar every week</b> so new riders always have a way in.</p>
 </footer>
+
+<!-- remove modal -->
+<div class="overlay" id="removeOverlay">
+  <div class="modal">
+    <h3>Remove entry</h3>
+    <p>This will remove you from the roster. You can always re-add yourself later.</p>
+    <div class="row">
+      <button class="btn btn-danger" id="confirmRemove">Yes, remove me</button>
+      <button class="btn" id="cancelRemove" style="background:#fff">Cancel</button>
+    </div>
+  </div>
+</div>
 
 <script>
 /* ---------- paceline animation ---------- */
@@ -204,7 +235,7 @@ const CYCLIST=`<svg viewBox="0 0 88 56" xmlns="http://www.w3.org/2000/svg" aria-
   });
 })();
 
-/* ---------- JSONBin config ---------- */
+/* ---------- JSONBin ---------- */
 const MASTER_KEY='$2a$10$Uul0qFmCrEE8nLzMADhtsOGU2kVcFX8FCWQdE3kFwUiedTz6skRca';
 const BASE='https://api.jsonbin.io/v3';
 let BIN_ID=localStorage.getItem('paceline_bin_id')||null;
@@ -216,38 +247,58 @@ async function apiFetch(path,method='GET',body){
   if(!r.ok) throw new Error(await r.text());
   return r.json();
 }
-
 async function initBin(){
   if(BIN_ID) return;
-  // create a new bin with empty state
-  const res=await apiFetch('/b','POST',{riders:[],match:null,history:[]});
+  const res=await apiFetch('/b','POST',{riders:[],match:null,history:[],matchWeek:null});
   BIN_ID=res.metadata.id;
   localStorage.setItem('paceline_bin_id',BIN_ID);
 }
-
-async function readBin(){
-  await initBin();
-  const res=await apiFetch(`/b/${BIN_ID}/latest`);
-  return res.record;
-}
-
-async function writeBin(data){
-  await initBin();
-  await apiFetch(`/b/${BIN_ID}`,'PUT',data);
-}
+async function readBin(){await initBin();const res=await apiFetch(`/b/${BIN_ID}/latest`);return res.record;}
+async function writeBin(data){await initBin();await apiFetch(`/b/${BIN_ID}`,'PUT',data);}
 
 /* ---------- helpers ---------- */
 function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function checkedVals(sel){return[...document.querySelectorAll(sel+' input:checked')].map(i=>i.value);}
 function showMsg(t,kind){const m=document.getElementById('joinMsg');m.textContent=t;m.className='msg '+kind;}
 
-let STATE={riders:[],match:null,history:[]};
+/* get ISO week string "YYYY-Www" for a date */
+function isoWeek(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));
+  const y=t.getUTCFullYear();
+  const w=Math.ceil((((t-new Date(Date.UTC(y,0,1)))/86400000)+1)/7);
+  return `${y}-W${String(w).padStart(2,'0')}`;
+}
+/* get the Monday of the current week */
+function thisMonday(){
+  const d=new Date();
+  const day=d.getDay();
+  const diff=d.getDate()-(day===0?6:day-1);
+  return new Date(d.setDate(diff));
+}
+
+let STATE={riders:[],match:null,history:[],matchWeek:null};
+let pendingRemoveId=null;
+
+/* ---------- auto-match on Monday ---------- */
+async function maybeAutoMatch(){
+  const week=isoWeek(new Date());
+  if(STATE.matchWeek===week) return; // already ran this week
+  // only auto-run if today is Monday (day===1) OR if we missed last week's run
+  const today=new Date();
+  const isMonday=today.getDay()===1;
+  if(!isMonday && STATE.matchWeek) return; // not Monday and we have a previous match — wait
+  if(STATE.riders.length<2) return;
+  await generate(week);
+}
 
 /* ---------- submit ---------- */
 document.getElementById('submitBtn').addEventListener('click',async()=>{
   const name=document.getElementById('f-name').value.trim();
   const contact=document.getElementById('f-contact').value.trim();
   const ctype=document.getElementById('f-ctype').value;
+  const gender=(document.querySelector('#f-gender input:checked')||{}).value;
+  const genpref=(document.querySelector('#f-genpref input:checked')||{}).value;
   const pace=(document.querySelector('#f-pace input:checked')||{}).value;
   const types=checkedVals('#f-types');
   const days=checkedVals('#f-days');
@@ -255,6 +306,8 @@ document.getElementById('submitBtn').addEventListener('click',async()=>{
   const line=document.getElementById('f-line').value.trim();
   if(!name) return showMsg('Add your name first.','err');
   if(!contact) return showMsg('Add a contact handle so your match can find you.','err');
+  if(!gender) return showMsg('Select a gender option.','err');
+  if(!genpref) return showMsg('Select a ride preference.','err');
   if(!pace) return showMsg('Pick a pace.','err');
   if(!types.length) return showMsg('Pick at least one type of riding.','err');
   if(!days.length) return showMsg('Pick at least one day you can ride.','err');
@@ -262,23 +315,41 @@ document.getElementById('submitBtn').addEventListener('click',async()=>{
   const btn=document.getElementById('submitBtn');
   btn.disabled=true;btn.textContent='Saving…';
   try{
-    const existing=STATE.riders.findIndex(r=>r.name.toLowerCase()===name.toLowerCase());
-    const id=existing>=0?STATE.riders[existing].id:('r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
-    const rider={id,name,contact,ctype,pace,types,days,level,line,createdAt:existing>=0?STATE.riders[existing].createdAt:Date.now()};
-    if(existing>=0) STATE.riders[existing]=rider; else STATE.riders.push(rider);
+    const ei=STATE.riders.findIndex(r=>r.name.toLowerCase()===name.toLowerCase());
+    const id=ei>=0?STATE.riders[ei].id:('r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+    const rider={id,name,contact,ctype,gender,genpref,pace,types,days,level,line,createdAt:ei>=0?STATE.riders[ei].createdAt:Date.now()};
+    if(ei>=0) STATE.riders[ei]=rider; else STATE.riders.push(rider);
     await writeBin(STATE);
-    showMsg(existing>=0?`Updated — see you out there, ${name}.`:`You're in, ${name}. Run the match below once the bunch fills up.`,'ok');
+    showMsg(ei>=0?`Updated — see you out there, ${name}.`:`You're in, ${name}. Matches drop every Monday.`,'ok');
     document.getElementById('f-name').value='';
     document.getElementById('f-contact').value='';
     document.getElementById('f-line').value='';
-    document.querySelectorAll('#f-types input:checked,#f-days input:checked,#f-pace input:checked,#f-level input:checked').forEach(i=>i.checked=false);
+    document.querySelectorAll('#f-types input:checked,#f-days input:checked,#f-pace input:checked,#f-level input:checked,#f-gender input:checked,#f-genpref input:checked').forEach(i=>i.checked=false);
     renderRoster();
   }catch(e){
-    console.error(e);
-    showMsg('Could not save — '+e.message,'err');
-  }finally{
-    btn.disabled=false;btn.textContent='Add me to the bunch →';
-  }
+    console.error(e);showMsg('Could not save — '+e.message,'err');
+  }finally{btn.disabled=false;btn.textContent='Add me to the bunch →';}
+});
+
+/* ---------- remove modal ---------- */
+document.getElementById('cancelRemove').addEventListener('click',()=>{
+  document.getElementById('removeOverlay').classList.remove('open');
+  pendingRemoveId=null;
+});
+document.getElementById('removeOverlay').addEventListener('click',e=>{
+  if(e.target===e.currentTarget){document.getElementById('removeOverlay').classList.remove('open');pendingRemoveId=null;}
+});
+document.getElementById('confirmRemove').addEventListener('click',async()=>{
+  if(!pendingRemoveId) return;
+  const btn=document.getElementById('confirmRemove');btn.disabled=true;btn.textContent='Removing…';
+  try{
+    STATE.riders=STATE.riders.filter(r=>r.id!==pendingRemoveId);
+    await writeBin(STATE);
+    document.getElementById('removeOverlay').classList.remove('open');
+    pendingRemoveId=null;
+    renderRoster();
+  }catch(e){console.error(e);}
+  finally{btn.disabled=false;btn.textContent='Yes, remove me';}
 });
 
 /* ---------- roster ---------- */
@@ -289,8 +360,19 @@ function renderRoster(){
   area.innerHTML=`<ul class="startlist">${STATE.riders.map((r,i)=>`<li>
     <span class="bib">#${String(i+1).padStart(2,'0')}</span>
     <span class="who">${esc(r.name)}</span>
-    <span class="meta"><span class="tag pace">${esc(r.pace)}</span>${r.types.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</span>
+    <span class="meta">
+      <span class="tag pace">${esc(r.pace)}</span>
+      ${r.types.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+      ${r.genpref&&r.genpref!=='Any'?`<span class="tag">${esc(r.genpref)}-only</span>`:''}
+      <button class="remove-btn" data-id="${esc(r.id)}">Remove</button>
+    </span>
   </li>`).join('')}</ul>`;
+  document.querySelectorAll('.remove-btn').forEach(b=>{
+    b.addEventListener('click',()=>{
+      pendingRemoveId=b.dataset.id;
+      document.getElementById('removeOverlay').classList.add('open');
+    });
+  });
 }
 
 /* ---------- matching ---------- */
@@ -301,7 +383,15 @@ const ROUTES={Road:['Old La Honda','Portola Valley loop','Cañada Road','Woodsid
 const COFFEE=["Roberts Market","Buck's of Woodside","Alpine Inn","Coupa Café"];
 const PACEWORD={Chill:'coffee pace',Moderate:'tempo',Fast:'spicy',Race:'full gas'};
 
+/* gender compatibility: both riders must consent to each other */
+function genderOk(a,b){
+  const aOk=a.genpref==='Any'||(a.genpref===b.gender);
+  const bOk=b.genpref==='Any'||(b.genpref===a.gender);
+  return aOk&&bOk;
+}
+
 function score(a,b,recent){
+  if(!genderOk(a,b)) return{s:-999,sharedTypes:[],sharedDays:[]};
   let s=0;
   if(a.pace===b.pace)s+=4;else if(adjPace(a.pace,b.pace))s+=1;else s-=3;
   const sharedTypes=a.types.filter(t=>b.types.includes(t));
@@ -309,6 +399,7 @@ function score(a,b,recent){
   const sharedDays=a.days.filter(d=>b.days.includes(d));
   s+=Math.min(sharedDays.length,2)*2;if(!sharedDays.length)s-=4;
   if(a.level===b.level)s+=1;
+  if(a.gender===b.gender)s+=1;
   if(recent.has(pairId(a.id,b.id)))s-=12;
   return{s,sharedTypes,sharedDays};
 }
@@ -320,8 +411,7 @@ function suggestRide(a,b,sharedTypes,sharedDays){
   return`${route} · ${dayWord} · ${PACEWORD[a.pace]||''} · coffee at ${COFFEE[Math.floor(Math.random()*COFFEE.length)]}`;
 }
 
-async function generate(){
-  if(STATE.riders.length<2){renderMatches({pairs:[],byes:STATE.riders.map(r=>r.id)},'Need at least two riders.');return;}
+async function generate(week){
   const recent=new Set((STATE.history||[]).slice(-Math.max(8,STATE.riders.length)));
   const cand=[];
   for(let i=0;i<STATE.riders.length;i++)for(let j=i+1;j<STATE.riders.length;j++){
@@ -331,13 +421,19 @@ async function generate(){
   cand.sort((x,y)=>y.s-x.s||x.r-y.r);
   const used=new Set(),pairs=[];
   for(const c of cand){
+    if(c.s<-900) continue; // gender incompatible
     if(used.has(c.a.id)||used.has(c.b.id))continue;
     used.add(c.a.id);used.add(c.b.id);pairs.push(c);
   }
   const byes=STATE.riders.filter(r=>!used.has(r.id)).map(r=>r.id);
   const newHistory=(STATE.history||[]).concat(pairs.map(p=>pairId(p.a.id,p.b.id))).slice(-40);
-  const match={generatedAt:Date.now(),pairs:pairs.map(p=>({a:p.a.id,b:p.b.id,ride:suggestRide(p.a,p.b,p.sharedTypes,p.sharedDays),shared:[...p.sharedTypes,...p.sharedDays]})),byes};
-  STATE.match=match;STATE.history=newHistory;
+  const match={
+    generatedAt:Date.now(),
+    week:week||isoWeek(new Date()),
+    pairs:pairs.map(p=>({a:p.a.id,b:p.b.id,ride:suggestRide(p.a,p.b,p.sharedTypes,p.sharedDays),shared:[...p.sharedTypes,...p.sharedDays]})),
+    byes
+  };
+  STATE.match=match;STATE.history=newHistory;STATE.matchWeek=match.week;
   await writeBin(STATE);
   renderMatches(match);
 }
@@ -345,44 +441,38 @@ async function generate(){
 function byId(id){return STATE.riders.find(r=>r.id===id);}
 function phtml(r){return`<div class="ph"><div class="pname">${esc(r.name)}</div><div class="preach">${esc(r.ctype)}: ${esc(r.contact)}</div>${r.line?`<div class="pline">"${esc(r.line)}"</div>`:''}</div>`;}
 
-function renderMatches(m,emptyMsg){
+function renderMatches(m){
   const area=document.getElementById('matchArea');
-  if(!m||(!m.pairs?.length&&!m.byes?.length)){area.innerHTML=`<div class="empty">${esc(emptyMsg||'No pairings yet. Get a few riders in the bunch, then run the match.')}</div>`;return;}
-  let html='<div class="pairs">';
+  if(!m||!m.pairs?.length&&!m.byes?.length){
+    area.innerHTML='<div class="empty">No pairings yet — check back Monday.</div>';return;
+  }
+  const d=new Date(m.generatedAt);
+  const dateStr=d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  let html=`<div class="match-banner">Matches for <b>${esc(m.week||'this week')}</b> · generated ${esc(dateStr)}</div><div class="pairs">`;
   (m.pairs||[]).forEach(p=>{
     const a=byId(p.a),b=byId(p.b);if(!a||!b)return;
     html+=`<div class="pair"><div class="pair-top">${phtml(a)}${phtml(b)}</div><div class="pair-foot"><span class="ride">🚲 <b>Suggested:</b> ${esc(p.ride)}</span>${p.shared?.length?`<span class="shared">in common · ${p.shared.map(esc).join(' / ')}</span>`:''}</div></div>`;
   });
-  (m.byes||[]).forEach(id=>{const r=byId(id);if(!r)return;html+=`<div class="bye"><b>${esc(r.name)}</b> sits out this round — odd number in the bunch.</div>`;});
+  (m.byes||[]).forEach(id=>{
+    const r=byId(id);if(!r)return;
+    html+=`<div class="bye"><b>${esc(r.name)}</b> sits out this round — odd number or no compatible match found.</div>`;
+  });
   html+='</div>';area.innerHTML=html;
 }
-
-/* ---------- buttons ---------- */
-document.getElementById('matchBtn').addEventListener('click',async()=>{
-  const b=document.getElementById('matchBtn');b.disabled=true;const t=b.textContent;b.textContent='Shuffling…';
-  try{await generate();}catch(e){console.error(e);}
-  b.disabled=false;b.textContent=t;
-  document.getElementById('matches').scrollIntoView({behavior:'smooth',block:'start'});
-});
-
-document.getElementById('resetBtn').addEventListener('click',async()=>{
-  if(!confirm('Clear the entire roster and matches for everyone? This cannot be undone.'))return;
-  STATE={riders:[],match:null,history:[]};
-  await writeBin(STATE);
-  renderRoster();
-  document.getElementById('matchArea').innerHTML='<div class="empty">Roster cleared. Fresh bunch — drop in above.</div>';
-});
 
 /* ---------- boot ---------- */
 (async function(){
   document.getElementById('rosterArea').innerHTML='<div class="loading">Loading roster…</div>';
   try{
     STATE=await readBin();
+    if(!STATE.riders) STATE.riders=[];
+    if(!STATE.history) STATE.history=[];
     renderRoster();
     if(STATE.match) renderMatches(STATE.match);
+    await maybeAutoMatch();
   }catch(e){
     console.error(e);
-    document.getElementById('rosterArea').innerHTML='<div class="empty">Could not load roster — '+esc(e.message)+'</div>';
+    document.getElementById('rosterArea').innerHTML=`<div class="empty">Could not load roster — ${esc(e.message)}</div>`;
   }
 })();
 </script>
