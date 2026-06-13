@@ -1,0 +1,515 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paceline — Stanford Cycling ride matcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --paper:#E9E5DC;       /* warm concrete */
+    --paper-2:#F2EFE8;     /* lighter card */
+    --ink:#1B1D22;         /* asphalt ink */
+    --ink-soft:#54565E;    /* secondary text */
+    --rule:#C9C3B6;        /* concrete rule */
+    --cardinal:#8C1515;    /* Stanford cardinal */
+    --cardinal-dk:#5E0E0E;
+    --hivis:#C6F03C;       /* kit hi-vis — the "go" pop, used sparingly */
+    --shadow:0 1px 0 rgba(27,29,34,.06), 0 12px 30px -18px rgba(27,29,34,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Inter",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+  }
+  .wrap{max-width:920px;margin:0 auto;padding:0 20px}
+  a{color:var(--cardinal)}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden;border-bottom:2px solid var(--ink)}
+  .hero-inner{padding:44px 20px 30px;max-width:920px;margin:0 auto;position:relative;z-index:2}
+  .eyebrow{
+    font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.22em;
+    text-transform:uppercase;color:var(--cardinal);font-weight:700;margin:0 0 10px
+  }
+  h1{
+    font-family:"Anton",sans-serif;font-weight:400;
+    font-size:clamp(56px,14vw,128px);line-height:.86;letter-spacing:.01em;
+    margin:0;text-transform:uppercase
+  }
+  h1 .drop{color:var(--cardinal);-webkit-text-stroke:0}
+  .lede{font-size:clamp(16px,2.3vw,20px);max-width:46ch;margin:18px 0 0;color:var(--ink-soft)}
+  .lede b{color:var(--ink);font-weight:600}
+
+  /* moving paceline */
+  .road{position:relative;height:96px;margin-top:24px;border-top:2px solid var(--ink)}
+  .road::after{
+    content:"";position:absolute;left:0;right:0;top:0;height:2px;
+    background:repeating-linear-gradient(90deg,var(--ink) 0 22px,transparent 22px 40px);
+    opacity:.0
+  }
+  .pace-track{position:absolute;inset:0;overflow:hidden}
+  .rider{position:absolute;bottom:6px;width:88px;height:56px;animation:roll linear infinite}
+  .rider svg{display:block;width:100%;height:100%}
+  @keyframes roll{from{transform:translateX(-120px)}to{transform:translateX(105vw)}}
+
+  /* ---------- sections ---------- */
+  section{padding:34px 0}
+  .sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:18px}
+  .sec-num{font-family:"Space Mono",monospace;font-size:13px;font-weight:700;color:var(--cardinal)}
+  h2{font-family:"Anton",sans-serif;font-weight:400;text-transform:uppercase;
+    font-size:clamp(26px,5vw,40px);letter-spacing:.01em;margin:0;line-height:1}
+  .sec-sub{color:var(--ink-soft);font-size:14px;margin:8px 0 0}
+
+  .card{background:var(--paper-2);border:1.5px solid var(--ink);border-radius:14px;
+    padding:22px;box-shadow:var(--shadow)}
+
+  /* form */
+  .field{margin:0 0 20px}
+  .field:last-child{margin-bottom:0}
+  label.flabel{display:block;font-weight:600;font-size:14px;margin-bottom:8px}
+  .hint{font-weight:400;color:var(--ink-soft)}
+  input[type=text]{
+    width:100%;font:inherit;padding:11px 13px;border:1.5px solid var(--rule);
+    border-radius:9px;background:#fff;color:var(--ink)
+  }
+  input[type=text]:focus,select:focus{outline:3px solid var(--hivis);outline-offset:1px;border-color:var(--ink)}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .row .grow{flex:1 1 200px}
+  select{font:inherit;padding:11px 13px;border:1.5px solid var(--rule);border-radius:9px;background:#fff;color:var(--ink)}
+
+  /* chip selectors (radio / checkbox styled as pills) */
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{position:relative;cursor:pointer;user-select:none}
+  .chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+  .chip span{display:block;padding:9px 14px;border:1.5px solid var(--rule);border-radius:999px;
+    font-size:14px;font-weight:500;background:#fff;transition:.12s}
+  .chip input:focus-visible+span{outline:3px solid var(--hivis);outline-offset:1px}
+  .chip input:checked+span{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip:hover span{border-color:var(--ink)}
+
+  .btn{font:inherit;font-weight:700;cursor:pointer;border-radius:999px;border:1.5px solid var(--ink);
+    padding:13px 24px;display:inline-flex;align-items:center;gap:9px;transition:.12s}
+  .btn-primary{background:var(--cardinal);color:#fff;border-color:var(--cardinal-dk)}
+  .btn-primary:hover{background:var(--cardinal-dk)}
+  .btn-go{background:var(--hivis);color:var(--ink);border-color:var(--ink)}
+  .btn-go:hover{filter:brightness(.95)}
+  .btn-ghost{background:transparent;color:var(--ink)}
+  .btn-ghost:hover{background:rgba(27,29,34,.06)}
+  .btn:focus-visible{outline:3px solid var(--hivis);outline-offset:2px}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:6px}
+
+  .note{font-size:12.5px;color:var(--ink-soft);margin-top:14px;display:flex;gap:8px;align-items:flex-start}
+  .note .dot{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--hivis);border:1px solid var(--ink);margin-top:6px}
+
+  .msg{font-size:14px;font-weight:600;margin-top:14px;padding:10px 14px;border-radius:9px;border:1.5px solid}
+  .msg.ok{background:#f3f8e6;border-color:#9fbe3c;color:#3f5a05}
+  .msg.err{background:#fbeceb;border-color:var(--cardinal);color:var(--cardinal-dk)}
+  .msg.hidden{display:none}
+
+  /* roster — start list */
+  .stat{font-family:"Space Mono",monospace;font-weight:700}
+  .startlist{list-style:none;margin:0;padding:0;border:1.5px solid var(--ink);border-radius:12px;overflow:hidden;background:var(--paper-2)}
+  .startlist li{display:flex;align-items:center;gap:14px;padding:13px 16px;border-bottom:1px solid var(--rule)}
+  .startlist li:last-child{border-bottom:0}
+  .bib{font-family:"Space Mono",monospace;font-weight:700;color:var(--cardinal);
+    font-size:13px;min-width:34px}
+  .who{font-weight:600}
+  .meta{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+  .tag{font-family:"Space Mono",monospace;font-size:11px;letter-spacing:.04em;
+    border:1px solid var(--rule);border-radius:6px;padding:3px 7px;color:var(--ink-soft);background:#fff;text-transform:uppercase}
+  .tag.pace{color:#fff;background:var(--ink);border-color:var(--ink)}
+  .empty{color:var(--ink-soft);font-size:15px;padding:18px;text-align:center;border:1.5px dashed var(--rule);border-radius:12px}
+
+  /* pairings */
+  .pairs{display:grid;gap:16px}
+  .pair{border:1.5px solid var(--ink);border-radius:14px;background:var(--paper-2);overflow:hidden;box-shadow:var(--shadow)}
+  .pair-top{display:flex;align-items:stretch}
+  .ph{flex:1;padding:16px 18px}
+  .ph + .ph{border-left:1.5px dashed var(--rule)}
+  .ph .pname{font-family:"Anton",sans-serif;font-size:22px;text-transform:uppercase;letter-spacing:.01em;line-height:1}
+  .ph .preach{font-family:"Space Mono",monospace;font-size:13px;margin-top:6px}
+  .ph .pline{font-size:13px;color:var(--ink-soft);margin-top:8px;font-style:italic}
+  .pair-foot{background:var(--ink);color:var(--paper);padding:13px 18px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .pair-foot .ride{font-family:"Space Mono",monospace;font-size:13px}
+  .pair-foot .ride b{color:var(--hivis)}
+  .pair-foot .shared{font-size:12px;color:#cfcabb;margin-left:auto}
+  .bye{border:1.5px dashed var(--cardinal);border-radius:12px;padding:14px 18px;background:#fbeceb;color:var(--cardinal-dk);font-size:14px;font-weight:500}
+
+  footer{border-top:2px solid var(--ink);padding:26px 0 50px;color:var(--ink-soft);font-size:13px}
+  footer b{color:var(--ink)}
+
+  .loading{font-family:"Space Mono",monospace;color:var(--ink-soft);font-size:14px;padding:16px}
+
+  @media (max-width:560px){
+    .pair-top{flex-direction:column}
+    .ph + .ph{border-left:0;border-top:1.5px dashed var(--rule)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .rider{animation:none;left:auto}
+    .rider:nth-child(1){left:6%}.rider:nth-child(2){left:24%}.rider:nth-child(3){left:42%}
+    .rider:nth-child(4){left:60%}.rider:nth-child(5){left:78%}
+  }
+</style>
+
+<header class="hero">
+  <div class="hero-inner">
+    <p class="eyebrow">Stanford Cycling · weekly ride matcher</p>
+    <h1>Pace<span class="drop">line</span></h1>
+    <p class="lede">Date Drop, but for rides. Drop your name in the bunch and each week you get <b>dropped in</b> with a new teammate to ride with — matched on pace, terrain, and when you're actually free.</p>
+    <div class="road"><div class="pace-track" id="paceTrack"></div></div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- 1. JOIN -->
+  <section id="join">
+    <div class="sec-head">
+      <span class="sec-num">01</span>
+      <div><h2>Drop in</h2><p class="sec-sub">Takes 30 seconds. You can re-submit anytime to update your entry.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="field">
+        <label class="flabel" for="f-name">Name <span class="hint">— first name + last initial</span></label>
+        <input type="text" id="f-name" maxlength="40" placeholder="Maya R." autocomplete="off">
+      </div>
+
+      <div class="field">
+        <label class="flabel">Reach me on</label>
+        <div class="row">
+          <select id="f-ctype" aria-label="Contact method">
+            <option value="Text">Text</option>
+            <option value="Instagram">Instagram</option>
+            <option value="Email">Email</option>
+          </select>
+          <input class="grow" type="text" id="f-contact" maxlength="60" placeholder="@maya.rides / number / email" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="flabel">Usual pace</label>
+        <div class="chips" id="f-pace" role="radiogroup" aria-label="Usual pace">
+          <label class="chip"><input type="radio" name="pace" value="Chill"><span>Chill / coffee pace</span></label>
+          <label class="chip"><input type="radio" name="pace" value="Moderate"><span>Moderate / tempo</span></label>
+          <label class="chip"><input type="radio" name="pace" value="Fast"><span>Fast / spicy</span></label>
+          <label class="chip"><input type="radio" name="pace" value="Race"><span>Race-ready</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="flabel">I ride <span class="hint">— pick all that apply</span></label>
+        <div class="chips" id="f-types">
+          <label class="chip"><input type="checkbox" value="Road"><span>Road</span></label>
+          <label class="chip"><input type="checkbox" value="Gravel"><span>Gravel</span></label>
+          <label class="chip"><input type="checkbox" value="MTB"><span>MTB</span></label>
+          <label class="chip"><input type="checkbox" value="Track"><span>Track</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="flabel">Free to ride</label>
+        <div class="chips" id="f-days">
+          <label class="chip"><input type="checkbox" value="Wkdy AM"><span>Weekday mornings</span></label>
+          <label class="chip"><input type="checkbox" value="Wkdy PM"><span>Weekday afternoons</span></label>
+          <label class="chip"><input type="checkbox" value="Sat"><span>Saturday</span></label>
+          <label class="chip"><input type="checkbox" value="Sun"><span>Sunday</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="flabel">Experience</label>
+        <div class="chips" id="f-level" role="radiogroup" aria-label="Experience">
+          <label class="chip"><input type="radio" name="level" value="New"><span>New-ish</span></label>
+          <label class="chip"><input type="radio" name="level" value="Comfortable"><span>Comfortable</span></label>
+          <label class="chip"><input type="radio" name="level" value="Seasoned"><span>Seasoned</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="flabel" for="f-line">Ice-breaker <span class="hint">— your go-to coffee-stop order</span></label>
+        <input type="text" id="f-line" maxlength="70" placeholder="oat cortado + a second breakfast" autocomplete="off">
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="submitBtn" type="button">Add me to the bunch →</button>
+      </div>
+
+      <div class="note"><span class="dot"></span><span>Your entry is shared with everyone using this matcher so the team can see the roster and reach their match. Add a contact handle only if you're okay with teammates seeing it.</span></div>
+      <div class="msg hidden" id="joinMsg"></div>
+    </div>
+  </section>
+
+  <!-- 2. THE BUNCH -->
+  <section id="bunch">
+    <div class="sec-head">
+      <span class="sec-num">02</span>
+      <div><h2>The bunch</h2><p class="sec-sub"><span class="stat" id="count">—</span> riders in this week's pool.</p></div>
+    </div>
+    <div id="rosterArea"><div class="loading">Rolling out the start list…</div></div>
+  </section>
+
+  <!-- 3. MATCHES -->
+  <section id="matches">
+    <div class="sec-head">
+      <span class="sec-num">03</span>
+      <div><h2>This week's pairings</h2><p class="sec-sub">One tap shuffles the bunch into pairs — same pace, shared terrain, overlapping days, and never the same partner two weeks running.</p></div>
+    </div>
+    <div class="actions" style="margin-bottom:18px">
+      <button class="btn btn-go" id="matchBtn" type="button">⚡ Run this week's match</button>
+      <button class="btn btn-ghost" id="resetBtn" type="button">Clear roster</button>
+    </div>
+    <div id="matchArea"><div class="empty">No pairings yet. Get a few riders in the bunch, then run the match.</div></div>
+  </section>
+</main>
+
+<footer class="wrap">
+  <p>Built for <b>Stanford Cycling</b>. Pairings are a starting point, not a rule — say hi, pick a time, ride bikes. Suggested routes lean local (Old La Honda, Portola Valley, Arastradero). <b>Keep one no-drop ride on the calendar every week</b> so new riders always have a way in.</p>
+</footer>
+
+<script>
+/* ---------- cyclist paceline animation ---------- */
+const CYCLIST = `<svg viewBox="0 0 88 56" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <g fill="none" stroke="CLR" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="20" cy="42" r="11"/><circle cx="68" cy="42" r="11"/>
+    <path d="M20 42 L40 42 L52 26 L68 42 M40 42 L46 26 L52 26 M46 26 L34 26"/>
+    <path d="M34 26 L24 33"/>
+  </g>
+  <g fill="CLR"><circle cx="49" cy="18" r="5"/><path d="M44 24 L40 42 q-1 3 -3 1" stroke="CLR" stroke-width="3" fill="none" stroke-linecap="round"/></g>
+</svg>`;
+(function(){
+  const track=document.getElementById('paceTrack');
+  const colors=['#8C1515','#1B1D22','#1B1D22','#8C1515','#1B1D22'];
+  const dur=[13,13.3,13.6,13.9,14.2], delay=[0,-1.1,-2.2,-3.3,-4.4];
+  colors.forEach((c,i)=>{
+    const d=document.createElement('div');
+    d.className='rider';
+    d.style.animationDuration=dur[i]+'s';
+    d.style.animationDelay=delay[i]+'s';
+    d.innerHTML=CYCLIST.replaceAll('CLR',c);
+    track.appendChild(d);
+  });
+})();
+
+/* ---------- storage helpers (shared roster) ---------- */
+const KEY=id=>`rider:${id}`;
+const MATCH_KEY='match:current';
+const HIST_KEY='match:history';
+
+async function safeGet(key){
+  try{ const r=await window.storage.get(key,true); return r?r.value:null; }
+  catch(e){ return null; }
+}
+async function loadRiders(){
+  let keys=[];
+  try{ const r=await window.storage.list('rider:',true); keys=(r&&r.keys)||[]; }
+  catch(e){ keys=[]; }
+  const out=[];
+  for(const k of keys){
+    const v=await safeGet(k);
+    if(v){ try{ out.push(JSON.parse(v)); }catch(_){} }
+  }
+  out.sort((a,b)=>a.createdAt-b.createdAt);
+  return out;
+}
+
+let RIDERS=[];
+
+/* ---------- read form ---------- */
+function checkedVals(sel){return [...document.querySelectorAll(sel+' input:checked')].map(i=>i.value);}
+function showMsg(t,kind){const m=document.getElementById('joinMsg');m.textContent=t;m.className='msg '+kind;}
+
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const name=document.getElementById('f-name').value.trim();
+  const contact=document.getElementById('f-contact').value.trim();
+  const ctype=document.getElementById('f-ctype').value;
+  const pace=(document.querySelector('#f-pace input:checked')||{}).value;
+  const types=checkedVals('#f-types');
+  const days=checkedVals('#f-days');
+  const level=(document.querySelector('#f-level input:checked')||{}).value;
+  const line=document.getElementById('f-line').value.trim();
+
+  if(!name){return showMsg('Add your name first.','err');}
+  if(!contact){return showMsg('Add a contact handle so your match can find you.','err');}
+  if(!pace){return showMsg('Pick a pace.','err');}
+  if(!types.length){return showMsg('Pick at least one type of riding.','err');}
+  if(!days.length){return showMsg('Pick at least one day you can ride.','err');}
+
+  const btn=document.getElementById('submitBtn');
+  btn.disabled=true; btn.textContent='Adding…';
+
+  // re-use existing id if same name already in roster (treat as update)
+  const existing=RIDERS.find(r=>r.name.toLowerCase()===name.toLowerCase());
+  const id=existing?existing.id:('r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  const rider={id,name,contact,ctype,pace,types,days,level,line,createdAt:existing?existing.createdAt:Date.now()};
+
+  try{
+    const res=await window.storage.set(KEY(id),JSON.stringify(rider),true);
+    if(!res) throw new Error('no result');
+    showMsg(existing?`Updated — see you out there, ${name}.`:`You're in, ${name}. Run the match below once the bunch fills up.`,'ok');
+    // reset some fields
+    document.getElementById('f-name').value='';
+    document.getElementById('f-contact').value='';
+    document.getElementById('f-line').value='';
+    document.querySelectorAll('#f-types input:checked,#f-days input:checked,#f-pace input:checked,#f-level input:checked').forEach(i=>i.checked=false);
+    await refresh();
+  }catch(e){
+    showMsg("Couldn't save your entry — check your connection and try again.",'err');
+  }finally{
+    btn.disabled=false; btn.textContent='Add me to the bunch →';
+  }
+});
+
+/* ---------- roster render ---------- */
+function renderRoster(){
+  document.getElementById('count').textContent=RIDERS.length;
+  const area=document.getElementById('rosterArea');
+  if(!RIDERS.length){area.innerHTML='<div class="empty">Empty bunch. Be the first to drop in above.</div>';return;}
+  const li=RIDERS.map((r,i)=>`<li>
+      <span class="bib">#${String(i+1).padStart(2,'0')}</span>
+      <span class="who">${esc(r.name)}</span>
+      <span class="meta">
+        <span class="tag pace">${esc(r.pace)}</span>
+        ${r.types.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}
+      </span>
+    </li>`).join('');
+  area.innerHTML=`<ul class="startlist">${li}</ul>`;
+}
+
+/* ---------- matching ---------- */
+function score(a,b,recent){
+  let s=0;
+  if(a.pace===b.pace)s+=4; else if(adjPace(a.pace,b.pace))s+=1; else s-=3;
+  const sharedTypes=a.types.filter(t=>b.types.includes(t));
+  s+=Math.min(sharedTypes.length,2)*3;
+  if(!sharedTypes.length)s-=2;
+  const sharedDays=a.days.filter(d=>b.days.includes(d));
+  s+=Math.min(sharedDays.length,2)*2;
+  if(!sharedDays.length)s-=4;
+  if(a.level===b.level)s+=1;
+  if(recent.has(pairId(a.id,b.id)))s-=12; // avoid repeats
+  return {s,sharedTypes,sharedDays};
+}
+const ORDER=['Chill','Moderate','Fast','Race'];
+function adjPace(x,y){return Math.abs(ORDER.indexOf(x)-ORDER.indexOf(y))===1;}
+function pairId(a,b){return [a,b].sort().join('|');}
+
+const ROUTES={
+  Road:['Old La Honda','Portola Valley loop','Cañada Road','Woodside–Sky Londa','Sand Hill spin'],
+  Gravel:['Arastradero gravel','Stevens Canyon dirt','Russian Ridge'],
+  MTB:['Arastradero Preserve','Coal Creek trails','Soquel Demo (day trip)'],
+  Track:['Hellyer Velodrome session']
+};
+const COFFEE=['Roberts Market','Buck\'s of Woodside','Alpine Inn','Coupa Café'];
+const PACEWORD={Chill:'coffee pace',Moderate:'tempo',Fast:'spicy',Race:'full gas'};
+
+function suggestRide(a,b,sharedTypes,sharedDays){
+  const type=sharedTypes[0]||a.types[0]||'Road';
+  const route=ROUTES[type][Math.floor(Math.random()*ROUTES[type].length)];
+  const day=sharedDays[0]||'this weekend';
+  const dayWord={'Wkdy AM':'a weekday morning','Wkdy PM':'a weekday afternoon','Sat':'Saturday','Sun':'Sunday'}[day]||day;
+  const paceW=PACEWORD[a.pace]||'';
+  const coffee=COFFEE[Math.floor(Math.random()*COFFEE.length)];
+  return `${route} · ${dayWord}${paceW?' · '+paceW:''} · coffee at ${coffee}`;
+}
+
+async function generate(){
+  if(RIDERS.length<2){renderMatches({pairs:[],byes:RIDERS.map(r=>r.id)},'Need at least two riders in the bunch to make a pairing.');return;}
+  let hist=[];
+  const h=await safeGet(HIST_KEY); if(h){try{hist=JSON.parse(h);}catch(_){}}
+  const recent=new Set(hist.slice(-Math.max(8,RIDERS.length))); // last round-ish
+
+  // build all candidate pairs with scores
+  const cand=[];
+  for(let i=0;i<RIDERS.length;i++)for(let j=i+1;j<RIDERS.length;j++){
+    const {s,sharedTypes,sharedDays}=score(RIDERS[i],RIDERS[j],recent);
+    cand.push({a:RIDERS[i],b:RIDERS[j],s,sharedTypes,sharedDays,r:Math.random()});
+  }
+  cand.sort((x,y)=> y.s-x.s || x.r-y.r );
+
+  const used=new Set(), pairs=[];
+  for(const c of cand){
+    if(used.has(c.a.id)||used.has(c.b.id))continue;
+    used.add(c.a.id);used.add(c.b.id);
+    pairs.push(c);
+  }
+  const byes=RIDERS.filter(r=>!used.has(r.id)).map(r=>r.id);
+
+  // persist current match + history
+  const newHist=hist.concat(pairs.map(p=>pairId(p.a.id,p.b.id))).slice(-40);
+  const stored={generatedAt:Date.now(),pairs:pairs.map(p=>({a:p.a.id,b:p.b.id,ride:suggestRide(p.a,p.b,p.sharedTypes,p.sharedDays),shared:[...p.sharedTypes,...p.sharedDays]})),byes};
+  try{
+    await window.storage.set(MATCH_KEY,JSON.stringify(stored),true);
+    await window.storage.set(HIST_KEY,JSON.stringify(newHist),true);
+  }catch(e){/* still show locally */}
+  renderMatches(stored);
+}
+
+function byId(id){return RIDERS.find(r=>r.id===id);}
+
+function renderMatches(m,emptyMsg){
+  const area=document.getElementById('matchArea');
+  if((!m.pairs||!m.pairs.length) && (!m.byes||!m.byes.length)){
+    area.innerHTML=`<div class="empty">${esc(emptyMsg||'No pairings yet.')}</div>`;return;
+  }
+  let html='<div class="pairs">';
+  (m.pairs||[]).forEach(p=>{
+    const a=byId(p.a),b=byId(p.b); if(!a||!b)return;
+    html+=`<div class="pair"><div class="pair-top">
+      ${phtml(a)}${phtml(b)}
+    </div><div class="pair-foot">
+      <span class="ride">🚲 <b>Suggested:</b> ${esc(p.ride)}</span>
+      ${p.shared&&p.shared.length?`<span class="shared">in common · ${p.shared.map(esc).join(' / ')}</span>`:''}
+    </div></div>`;
+  });
+  (m.byes||[]).forEach(id=>{
+    const r=byId(id); if(!r)return;
+    html+=`<div class="bye"><b>${esc(r.name)}</b> sits out this round — perfect excuse to roll the team no-drop ride. (Odd number in the bunch.)</div>`;
+  });
+  html+='</div>';
+  area.innerHTML=html;
+}
+function phtml(r){
+  return `<div class="ph">
+    <div class="pname">${esc(r.name)}</div>
+    <div class="preach">${esc(r.ctype)}: ${esc(r.contact)}</div>
+    ${r.line?`<div class="pline">“${esc(r.line)}”</div>`:''}
+  </div>`;
+}
+
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---------- buttons ---------- */
+document.getElementById('matchBtn').addEventListener('click', async ()=>{
+  const b=document.getElementById('matchBtn'); b.disabled=true; const t=b.textContent; b.textContent='Shuffling the bunch…';
+  await refresh(); await generate();
+  b.disabled=false; b.textContent=t;
+  document.getElementById('matches').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+document.getElementById('resetBtn').addEventListener('click', async ()=>{
+  if(!confirm('Clear the entire roster and matches for everyone? This can\'t be undone.'))return;
+  try{
+    const r=await window.storage.list('rider:',true);
+    for(const k of (r&&r.keys||[])) await window.storage.delete(k,true);
+    await window.storage.delete(MATCH_KEY,true);
+    await window.storage.delete(HIST_KEY,true);
+  }catch(e){}
+  document.getElementById('matchArea').innerHTML='<div class="empty">Roster cleared. Fresh bunch — drop in above.</div>';
+  await refresh();
+});
+
+/* ---------- boot ---------- */
+async function refresh(){ RIDERS=await loadRiders(); renderRoster(); }
+(async function init(){
+  await refresh();
+  const m=await safeGet(MATCH_KEY);
+  if(m){ try{ renderMatches(JSON.parse(m)); }catch(_){} }
+})();
+</script>
