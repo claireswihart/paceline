@@ -270,7 +270,7 @@
 </main>
 
 <footer class="wrap">
-  <p>Built for <b>Stanford Cycling</b>. Pairings are a starting point, not a rule — say hi, pick a time, ride bikes. Suggested routes lean local (Old La Honda, Portola Valley, Arastradero). <b>Keep one no-drop ride on the calendar every week</b> so new riders always have a way in.</p>
+  <p>Built for <b>Stanford Cycling</b>. Suggested routes lean local (Old La Honda, Portola Valley, Arastradero). <b>Keep one no-drop ride on the calendar every week</b> so new riders always have a way in.</p>
 </footer>
 
 <script>
@@ -302,13 +302,33 @@ const KEY=id=>`rider:${id}`;
 const MATCH_KEY='match:current';
 const HIST_KEY='match:history';
 
+// Fallback in-memory store if window.storage isn't available in this environment
+const HAS_STORAGE = typeof window!=='undefined' && !!window.storage;
+const MEM={data:{}};
+const storageGet=async(key)=>{
+  if(HAS_STORAGE){ return window.storage.get(key,true); }
+  return MEM.data[key]!==undefined ? {key,value:MEM.data[key],shared:true} : null;
+};
+const storageSet=async(key,value)=>{
+  if(HAS_STORAGE){ return window.storage.set(key,value,true); }
+  MEM.data[key]=value; return {key,value,shared:true};
+};
+const storageDelete=async(key)=>{
+  if(HAS_STORAGE){ return window.storage.delete(key,true); }
+  delete MEM.data[key]; return {key,deleted:true,shared:true};
+};
+const storageList=async(prefix)=>{
+  if(HAS_STORAGE){ return window.storage.list(prefix,true); }
+  return {keys:Object.keys(MEM.data).filter(k=>k.startsWith(prefix)),prefix,shared:true};
+};
+
 async function safeGet(key){
-  try{ const r=await window.storage.get(key,true); return r?r.value:null; }
+  try{ const r=await storageGet(key); return r?r.value:null; }
   catch(e){ return null; }
 }
 async function loadRiders(){
   let keys=[];
-  try{ const r=await window.storage.list('rider:',true); keys=(r&&r.keys)||[]; }
+  try{ const r=await storageList('rider:'); keys=(r&&r.keys)||[]; }
   catch(e){ keys=[]; }
   const out=[];
   for(const k of keys){
@@ -350,8 +370,8 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
   const rider={id,name,contact,ctype,pace,types,days,level,line,createdAt:existing?existing.createdAt:Date.now()};
 
   try{
-    const res=await window.storage.set(KEY(id),JSON.stringify(rider),true);
-    if(!res) throw new Error('no result');
+    const res=await storageSet(KEY(id),JSON.stringify(rider));
+    if(!res) throw new Error('Storage set returned no result');
     showMsg(existing?`Updated — see you out there, ${name}.`:`You're in, ${name}. Run the match below once the bunch fills up.`,'ok');
     // reset some fields
     document.getElementById('f-name').value='';
@@ -360,7 +380,8 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     document.querySelectorAll('#f-types input:checked,#f-days input:checked,#f-pace input:checked,#f-level input:checked').forEach(i=>i.checked=false);
     await refresh();
   }catch(e){
-    showMsg("Couldn't save your entry — check your connection and try again.",'err');
+    console.error('Save failed:', e);
+    showMsg("Couldn't save your entry (" + (e && e.message ? e.message : 'unknown error') + "). Try again in a moment.",'err');
   }finally{
     btn.disabled=false; btn.textContent='Add me to the bunch →';
   }
@@ -445,8 +466,8 @@ async function generate(){
   const newHist=hist.concat(pairs.map(p=>pairId(p.a.id,p.b.id))).slice(-40);
   const stored={generatedAt:Date.now(),pairs:pairs.map(p=>({a:p.a.id,b:p.b.id,ride:suggestRide(p.a,p.b,p.sharedTypes,p.sharedDays),shared:[...p.sharedTypes,...p.sharedDays]})),byes};
   try{
-    await window.storage.set(MATCH_KEY,JSON.stringify(stored),true);
-    await window.storage.set(HIST_KEY,JSON.stringify(newHist),true);
+    await storageSet(MATCH_KEY,JSON.stringify(stored));
+    await storageSet(HIST_KEY,JSON.stringify(newHist));
   }catch(e){/* still show locally */}
   renderMatches(stored);
 }
@@ -496,10 +517,10 @@ document.getElementById('matchBtn').addEventListener('click', async ()=>{
 document.getElementById('resetBtn').addEventListener('click', async ()=>{
   if(!confirm('Clear the entire roster and matches for everyone? This can\'t be undone.'))return;
   try{
-    const r=await window.storage.list('rider:',true);
-    for(const k of (r&&r.keys||[])) await window.storage.delete(k,true);
-    await window.storage.delete(MATCH_KEY,true);
-    await window.storage.delete(HIST_KEY,true);
+    const r=await storageList('rider:');
+    for(const k of (r&&r.keys||[])) await storageDelete(k);
+    await storageDelete(MATCH_KEY);
+    await storageDelete(HIST_KEY);
   }catch(e){}
   document.getElementById('matchArea').innerHTML='<div class="empty">Roster cleared. Fresh bunch — drop in above.</div>';
   await refresh();
